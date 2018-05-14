@@ -1,6 +1,7 @@
 package eventSourcing
 
-type eventStore interface {
+//go:generate moq -out eventStoreMock.go . eventStoreI
+type eventStoreI interface {
 	save(message *domainMessage) error
-	load(ID string) ([]*domainMessage, error)
+	load(ID string) (*domainMessages, error)
 }

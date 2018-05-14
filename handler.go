@@ -3,7 +3,7 @@ package eventSourcing
 import "sync"
 
 func handle(event Event) error {
-	eb := &stdEventBus
+	eb := &eventBus
 	list := eb.getListeners(event)
 	var wg sync.WaitGroup
 	ch := make(chan error, len(list))
