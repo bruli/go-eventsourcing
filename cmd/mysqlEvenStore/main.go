@@ -8,13 +8,20 @@ import (
 )
 
 func main() {
-	databaseUrl := flag.String("databaseUrl", "", "-databaseUrl [DATABASE_URL]")
+	database := flag.String("database", "", "-database [DATABASE_NAME]")
+	host := flag.String("host", "", "-host [HOST]")
+	port := flag.String("port", "", "-port [PORT]")
+	user := flag.String("user", "", "-user [USER]")
+	pass := flag.String("pass", "", "-pass [PASSWORD]")
 	flag.Parse()
-	if "" == *databaseUrl {
-		fmt.Println("Usage : -databaseUrl [DATABASE_URL]")
+	if "" == *database || "" == *host || "" == *port || "" == *user || "" == *pass{
+		fmt.Println("Usage : -host [HOST] -port [PORT] -user [USER] -pass [PASSWORD] -database [DATABASE_NAME]")
 		return
 	}
-	con := databaseConnection(*databaseUrl)
+
+	databaseUrl := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", *user, *pass, *host, *port, *database)
+
+	con := databaseConnection(databaseUrl)
 	defer con.Close()
 	_, err := con.Exec("CREATE TABLE events(id INT AUTO_INCREMENT PRIMARY KEY, uuid VARCHAR(255) NOT NULL, payload TEXT NOT NULL, recorded_on VARCHAR(255) NOT NULL, type VARCHAR(255) NOT NULL)ENGINE = InnoDB;")
 
