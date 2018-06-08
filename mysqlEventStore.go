@@ -1,74 +1,84 @@
 package eventSourcing
 
 import (
-	"database/sql"
-	"encoding/json"
+	"errors"
 	"time"
 )
 
 type MysqlEventStore struct {
-	DatabaseUrl string
+	DatabaseUrl      string
+	Listeners        map[string][]Listener
+	Events           map[string][]Event
+	eventStore       eventStore
+	newEvents        events
+	listenersHandler *listenersHandler
 }
 
-func (e *MysqlEventStore) save(message *domainMessage) error {
-	con, err := e.databaseConnection()
-	if err != nil {
-		return err
-	}
-	defer con.Close()
-	stmt, err := con.Prepare("INSERT INTO events(uuid, payload, recorded_on, type) VALUES (?, ?, ?, ?)")
-	defer stmt.Close()
-	if err != nil {
-		return err
-	}
-	p, err := message.getPayload()
+func (mes *MysqlEventStore) DeclareListener(list Listener, ev Event) {
+	mes.Listeners[ev.Name()] = append(mes.Listeners[ev.Name()], list)
+}
 
-	if err != nil {
-		return err
+func (mes *MysqlEventStore) DeclareEvent(ev Event) {
+	mes.Events[ev.Name()] = append(mes.Events[ev.Name()], ev)
+}
+
+func (mes *MysqlEventStore) validate() error {
+	var err error
+	if "" == mes.DatabaseUrl {
+		err = errors.New("Invalid database url")
 	}
-	recorderOn := message.getRecorderOn()
-	args := []interface{}{message.id, p, recorderOn, message.payload.Name()}
-	_, err = stmt.Exec(args...)
+
 	return err
 }
 
-func (e *MysqlEventStore) load(Id string) (*domainMessages, error) {
-	c, err := e.databaseConnection()
-	if err != nil {
-		return nil, err
-	}
-	defer c.Close()
-	rows, err := c.Query("SELECT uuid, payload, recorded_on, type FROM events where uuid = ?", Id)
-	defer rows.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	result := domainMessages{}
-
-	for rows.Next() {
-		var (
-			id         string
-			payload    string
-			recordedOn string
-			typeEvent  string
-		)
-
-		rows.Scan(&id, &payload, &recordedOn, &typeEvent)
-
-		event := eventBus.getEvent(typeEvent)
-
-		json.Unmarshal([]byte(payload), &event)
-
-		recorded, _ := time.Parse(time.RFC3339, recordedOn)
-		dm := domainMessage{id: id, recorderOn: recorded, payload: event}
-
-		result.addMessage(&dm)
-	}
-
-	return &result, err
-
+func (mes *MysqlEventStore) Init() {
+	mes.Listeners = make(map[string][]Listener)
+	mes.Events = make(map[string][]Event)
 }
-func (e *MysqlEventStore) databaseConnection() (*sql.DB, error) {
-	return sql.Open("mysql", e.DatabaseUrl)
+
+func (mes *MysqlEventStore) Load(id string, agg Aggregate) error {
+	if err := mes.validate(); err != nil {
+		return err
+	}
+	dm, err := mes.eventStore.load(id)
+	if err != nil {
+		return err
+	}
+
+	if dm == nil {
+		return nil
+	}
+
+	agg.ReplayEvents(dm.getEvents())
+
+	return nil
+}
+
+func (mes *MysqlEventStore) ApplyNewEvent(e Event) {
+	mes.newEvents = append(mes.newEvents, e)
+}
+
+func (mes *MysqlEventStore) Save(a Aggregate) error {
+	if err := mes.validate(); err != nil {
+		return err
+	}
+	for _, ev := range mes.newEvents {
+		dm := domainMessage{id: a.GetID(), payload: ev, recorderOn: time.Now()}
+
+		if err := mes.eventStore.save(&dm); err != nil {
+			return err
+		}
+
+		if err := mes.handleListeners(ev); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (mes *MysqlEventStore) handleListeners(ev Event) error {
+	listHand := mes.listenersHandler
+	listHand.setListeners(mes.Listeners)
+	return listHand.handle(ev)
 }

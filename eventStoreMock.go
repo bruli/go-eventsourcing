@@ -8,17 +8,17 @@ import (
 )
 
 var (
-	lockeventStoreIMockload sync.RWMutex
-	lockeventStoreIMocksave sync.RWMutex
+	lockeventStoreMockload sync.RWMutex
+	lockeventStoreMocksave sync.RWMutex
 )
 
-// eventStoreIMock is a mock implementation of eventStoreI.
+// eventStoreMock is a mock implementation of eventStore.
 //
-//     func TestSomethingThatUseseventStoreI(t *testing.T) {
+//     func TestSomethingThatUseseventStore(t *testing.T) {
 //
-//         // make and configure a mocked eventStoreI
-//         mockedeventStoreI := &eventStoreIMock{
-//             loadFunc: func(ID string) ([]*domainMessage, error) {
+//         // make and configure a mocked eventStore
+//         mockedeventStore := &eventStoreMock{
+//             loadFunc: func(ID string) (*domainMessages, error) {
 // 	               panic("TODO: mock out the load method")
 //             },
 //             saveFunc: func(message *domainMessage) error {
@@ -26,13 +26,13 @@ var (
 //             },
 //         }
 //
-//         // TODO: use mockedeventStoreI in code that requires eventStoreI
+//         // TODO: use mockedeventStore in code that requires eventStore
 //         //       and then make assertions.
 //
 //     }
-type eventStoreIMock struct {
+type eventStoreMock struct {
 	// loadFunc mocks the load method.
-	loadFunc func(ID string) ([]*domainMessage, error)
+	loadFunc func(ID string) (*domainMessages, error)
 
 	// saveFunc mocks the save method.
 	saveFunc func(message *domainMessage) error
@@ -53,63 +53,63 @@ type eventStoreIMock struct {
 }
 
 // load calls loadFunc.
-func (mock *eventStoreIMock) load(ID string) ([]*domainMessage, error) {
+func (mock *eventStoreMock) load(ID string) (*domainMessages, error) {
 	if mock.loadFunc == nil {
-		panic("moq: eventStoreIMock.loadFunc is nil but eventStoreI.load was just called")
+		panic("moq: eventStoreMock.loadFunc is nil but eventStore.load was just called")
 	}
 	callInfo := struct {
 		ID string
 	}{
 		ID: ID,
 	}
-	lockeventStoreIMockload.Lock()
+	lockeventStoreMockload.Lock()
 	mock.calls.load = append(mock.calls.load, callInfo)
-	lockeventStoreIMockload.Unlock()
+	lockeventStoreMockload.Unlock()
 	return mock.loadFunc(ID)
 }
 
 // loadCalls gets all the calls that were made to load.
 // Check the length with:
-//     len(mockedeventStoreI.loadCalls())
-func (mock *eventStoreIMock) loadCalls() []struct {
+//     len(mockedeventStore.loadCalls())
+func (mock *eventStoreMock) loadCalls() []struct {
 	ID string
 } {
 	var calls []struct {
 		ID string
 	}
-	lockeventStoreIMockload.RLock()
+	lockeventStoreMockload.RLock()
 	calls = mock.calls.load
-	lockeventStoreIMockload.RUnlock()
+	lockeventStoreMockload.RUnlock()
 	return calls
 }
 
 // save calls saveFunc.
-func (mock *eventStoreIMock) save(message *domainMessage) error {
+func (mock *eventStoreMock) save(message *domainMessage) error {
 	if mock.saveFunc == nil {
-		panic("moq: eventStoreIMock.saveFunc is nil but eventStoreI.save was just called")
+		panic("moq: eventStoreMock.saveFunc is nil but eventStore.save was just called")
 	}
 	callInfo := struct {
 		Message *domainMessage
 	}{
 		Message: message,
 	}
-	lockeventStoreIMocksave.Lock()
+	lockeventStoreMocksave.Lock()
 	mock.calls.save = append(mock.calls.save, callInfo)
-	lockeventStoreIMocksave.Unlock()
+	lockeventStoreMocksave.Unlock()
 	return mock.saveFunc(message)
 }
 
 // saveCalls gets all the calls that were made to save.
 // Check the length with:
-//     len(mockedeventStoreI.saveCalls())
-func (mock *eventStoreIMock) saveCalls() []struct {
+//     len(mockedeventStore.saveCalls())
+func (mock *eventStoreMock) saveCalls() []struct {
 	Message *domainMessage
 } {
 	var calls []struct {
 		Message *domainMessage
 	}
-	lockeventStoreIMocksave.RLock()
+	lockeventStoreMocksave.RLock()
 	calls = mock.calls.save
-	lockeventStoreIMocksave.RUnlock()
+	lockeventStoreMocksave.RUnlock()
 	return calls
 }
