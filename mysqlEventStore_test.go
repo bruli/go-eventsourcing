@@ -11,7 +11,7 @@ import (
 
 func TestMysqlEventStore(t *testing.T) {
 	t.Run("it should return error without databaseUrl", func(t *testing.T) {
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		listHand := listenersHandler{}
 
 		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand}
@@ -20,7 +20,7 @@ func TestMysqlEventStore(t *testing.T) {
 
 	})
 	t.Run("it should return error when load return error", func(t *testing.T) {
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
 			return nil, errors.New("error")
 		}
@@ -33,7 +33,7 @@ func TestMysqlEventStore(t *testing.T) {
 	})
 
 	t.Run("it should return error nil without domain messages", func(t *testing.T) {
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
 			return nil, nil
 		}
@@ -45,7 +45,7 @@ func TestMysqlEventStore(t *testing.T) {
 
 	})
 	t.Run("it should replay events in load", func(t *testing.T) {
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
 			dms := domainMessagesStub()
 			return &dms, nil
@@ -60,7 +60,7 @@ func TestMysqlEventStore(t *testing.T) {
 
 	})
 	t.Run("it should return error when invalid from save", func(t *testing.T) {
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
 			dms := domainMessagesStub()
 			return &dms, nil
@@ -76,7 +76,7 @@ func TestMysqlEventStore(t *testing.T) {
 	})
 
 	t.Run("it should return nil without events", func(t *testing.T) {
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return errors.New("error")
 		}
@@ -89,7 +89,7 @@ func TestMysqlEventStore(t *testing.T) {
 	})
 	t.Run("it should return error when save returns error", func(t *testing.T) {
 		ev := EventMock{}
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return errors.New("error")
 		}
@@ -120,7 +120,7 @@ func TestMysqlEventStore(t *testing.T) {
 				return errors.New("error")
 			},
 		}
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return nil
 		}
@@ -155,7 +155,7 @@ func TestMysqlEventStore(t *testing.T) {
 				return nil
 			},
 		}
-		eventSt := &eventStoreMock{}
+		eventSt := &eventStoreRepositoryMock{}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return nil
 		}

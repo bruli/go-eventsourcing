@@ -9,7 +9,7 @@ type MysqlEventStore struct {
 	DatabaseUrl      string
 	Listeners        map[string][]Listener
 	Events           map[string][]Event
-	eventStore       eventStore
+	eventStore       eventStoreRepository
 	newEvents        events
 	listenersHandler *listenersHandler
 }

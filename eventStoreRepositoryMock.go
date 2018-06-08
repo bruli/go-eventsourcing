@@ -12,12 +12,12 @@ var (
 	lockeventStoreMocksave sync.RWMutex
 )
 
-// eventStoreMock is a mock implementation of eventStore.
+// eventStoreRepositoryMock is a mock implementation of eventStoreRepository.
 //
 //     func TestSomethingThatUseseventStore(t *testing.T) {
 //
-//         // make and configure a mocked eventStore
-//         mockedeventStore := &eventStoreMock{
+//         // make and configure a mocked eventStoreRepository
+//         mockedeventStore := &eventStoreRepositoryMock{
 //             loadFunc: func(ID string) (*domainMessages, error) {
 // 	               panic("TODO: mock out the load method")
 //             },
@@ -26,11 +26,11 @@ var (
 //             },
 //         }
 //
-//         // TODO: use mockedeventStore in code that requires eventStore
+//         // TODO: use mockedeventStore in code that requires eventStoreRepository
 //         //       and then make assertions.
 //
 //     }
-type eventStoreMock struct {
+type eventStoreRepositoryMock struct {
 	// loadFunc mocks the load method.
 	loadFunc func(ID string) (*domainMessages, error)
 
@@ -53,9 +53,9 @@ type eventStoreMock struct {
 }
 
 // load calls loadFunc.
-func (mock *eventStoreMock) load(ID string) (*domainMessages, error) {
+func (mock *eventStoreRepositoryMock) load(ID string) (*domainMessages, error) {
 	if mock.loadFunc == nil {
-		panic("moq: eventStoreMock.loadFunc is nil but eventStore.load was just called")
+		panic("moq: eventStoreRepositoryMock.loadFunc is nil but eventStoreRepository.load was just called")
 	}
 	callInfo := struct {
 		ID string
@@ -71,7 +71,7 @@ func (mock *eventStoreMock) load(ID string) (*domainMessages, error) {
 // loadCalls gets all the calls that were made to load.
 // Check the length with:
 //     len(mockedeventStore.loadCalls())
-func (mock *eventStoreMock) loadCalls() []struct {
+func (mock *eventStoreRepositoryMock) loadCalls() []struct {
 	ID string
 } {
 	var calls []struct {
@@ -84,9 +84,9 @@ func (mock *eventStoreMock) loadCalls() []struct {
 }
 
 // save calls saveFunc.
-func (mock *eventStoreMock) save(message *domainMessage) error {
+func (mock *eventStoreRepositoryMock) save(message *domainMessage) error {
 	if mock.saveFunc == nil {
-		panic("moq: eventStoreMock.saveFunc is nil but eventStore.save was just called")
+		panic("moq: eventStoreRepositoryMock.saveFunc is nil but eventStoreRepository.save was just called")
 	}
 	callInfo := struct {
 		Message *domainMessage
@@ -102,7 +102,7 @@ func (mock *eventStoreMock) save(message *domainMessage) error {
 // saveCalls gets all the calls that were made to save.
 // Check the length with:
 //     len(mockedeventStore.saveCalls())
-func (mock *eventStoreMock) saveCalls() []struct {
+func (mock *eventStoreRepositoryMock) saveCalls() []struct {
 	Message *domainMessage
 } {
 	var calls []struct {
