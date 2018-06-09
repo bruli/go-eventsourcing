@@ -10,15 +10,6 @@ import (
 )
 
 func TestMysqlEventStore(t *testing.T) {
-	t.Run("it should return error without databaseUrl", func(t *testing.T) {
-		eventSt := &eventStoreRepositoryMock{}
-		listHand := listenersHandler{}
-
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand}
-		agg := &AggregateMock{}
-		assert.Error(t, mysqlES.Load(uuid.NewV4().String(), agg))
-
-	})
 	t.Run("it should return error when load return error", func(t *testing.T) {
 		eventSt := &eventStoreRepositoryMock{}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
@@ -26,9 +17,9 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand, DatabaseUrl: "database"}
+		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
-		assert.Error(t, mysqlES.Load(uuid.NewV4().String(), agg))
+		assert.Error(t, mysqlES.load(uuid.NewV4().String(), agg))
 
 	})
 
@@ -39,9 +30,9 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand, DatabaseUrl: "database"}
+		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
-		assert.Nil(t, mysqlES.Load(uuid.NewV4().String(), agg))
+		assert.Nil(t, mysqlES.load(uuid.NewV4().String(), agg))
 
 	})
 	t.Run("it should replay events in load", func(t *testing.T) {
@@ -52,26 +43,11 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand, DatabaseUrl: "database"}
+		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
 		agg.ReplayEventsFunc = func(e []Event) {
 		}
-		assert.Nil(t, mysqlES.Load(uuid.NewV4().String(), agg))
-
-	})
-	t.Run("it should return error when invalid from save", func(t *testing.T) {
-		eventSt := &eventStoreRepositoryMock{}
-		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
-			dms := domainMessagesStub()
-			return &dms, nil
-		}
-		listHand := listenersHandler{}
-
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand}
-		agg := &AggregateMock{}
-		agg.ReplayEventsFunc = func(e []Event) {
-		}
-		assert.Error(t, mysqlES.Save(agg))
+		assert.Nil(t, mysqlES.load(uuid.NewV4().String(), agg))
 
 	})
 
@@ -82,9 +58,9 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand, DatabaseUrl: "database"}
+		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
-		assert.Nil(t, mysqlES.Save(agg))
+		assert.Nil(t, mysqlES.save(agg))
 
 	})
 	t.Run("it should return error when save returns error", func(t *testing.T) {
@@ -95,14 +71,14 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand, DatabaseUrl: "database"}
+		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
 		}
 
-		mysqlES.ApplyNewEvent(&ev)
-		assert.Error(t, mysqlES.Save(agg))
+		mysqlES.applyNewEvent(&ev)
+		assert.Error(t, mysqlES.save(agg))
 
 	})
 	t.Run("it should return error when listeners returns error", func(t *testing.T) {
@@ -126,18 +102,18 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand, DatabaseUrl: "database"}
-		mysqlES.Init()
-		mysqlES.DeclareListener(&list1, ev)
-		mysqlES.DeclareListener(&list2, ev)
-		mysqlES.DeclareEvent(ev)
+		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		mysqlES.init()
+		mysqlES.declareListener(&list1, ev)
+		mysqlES.declareListener(&list2, ev)
+		mysqlES.declareEvent(ev)
 		agg := &AggregateMock{}
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
 		}
 
-		mysqlES.ApplyNewEvent(ev)
-		assert.Error(t, mysqlES.Save(agg))
+		mysqlES.applyNewEvent(ev)
+		assert.Error(t, mysqlES.save(agg))
 
 	})
 	t.Run("it should save new event and call listeners", func(t *testing.T) {
@@ -161,18 +137,18 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := MysqlEventStore{eventStore: eventSt, listenersHandler: &listHand, DatabaseUrl: "database"}
-		mysqlES.Init()
-		mysqlES.DeclareListener(&list1, ev)
-		mysqlES.DeclareListener(&list2, ev)
-		mysqlES.DeclareEvent(ev)
+		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		mysqlES.init()
+		mysqlES.declareListener(&list1, ev)
+		mysqlES.declareListener(&list2, ev)
+		mysqlES.declareEvent(ev)
 		agg := &AggregateMock{}
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
 		}
 
-		mysqlES.ApplyNewEvent(ev)
-		assert.Nil(t, mysqlES.Save(agg))
+		mysqlES.applyNewEvent(ev)
+		assert.Nil(t, mysqlES.save(agg))
 
 	})
 }
