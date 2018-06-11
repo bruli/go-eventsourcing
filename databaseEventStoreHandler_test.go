@@ -11,7 +11,9 @@ import (
 
 func TestDatabaseEventStore(t *testing.T) {
 	t.Run("it should return error when load return error", func(t *testing.T) {
-		eventSt := &eventStoreRepositoryMock{}
+		eventSt := &databaseEventStoreRepositoryMock{}
+		eventSt.setEventsFunc = func(ev map[string]Event) {
+		}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
 			return nil, errors.New("error")
 		}
@@ -24,7 +26,9 @@ func TestDatabaseEventStore(t *testing.T) {
 	})
 
 	t.Run("it should return error nil without domain messages", func(t *testing.T) {
-		eventSt := &eventStoreRepositoryMock{}
+		eventSt := &databaseEventStoreRepositoryMock{}
+		eventSt.setEventsFunc = func(ev map[string]Event) {
+		}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
 			return nil, nil
 		}
@@ -36,7 +40,9 @@ func TestDatabaseEventStore(t *testing.T) {
 
 	})
 	t.Run("it should replay events in load", func(t *testing.T) {
-		eventSt := &eventStoreRepositoryMock{}
+		eventSt := &databaseEventStoreRepositoryMock{}
+		eventSt.setEventsFunc = func(ev map[string]Event) {
+		}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
 			dms := domainMessagesStub()
 			return &dms, nil
@@ -52,7 +58,9 @@ func TestDatabaseEventStore(t *testing.T) {
 	})
 
 	t.Run("it should return nil without events", func(t *testing.T) {
-		eventSt := &eventStoreRepositoryMock{}
+		eventSt := &databaseEventStoreRepositoryMock{}
+		eventSt.setEventsFunc = func(ev map[string]Event) {
+		}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return errors.New("error")
 		}
@@ -67,7 +75,7 @@ func TestDatabaseEventStore(t *testing.T) {
 	})
 	t.Run("it should return error when save returns error", func(t *testing.T) {
 		ev := EventMock{}
-		eventSt := &eventStoreRepositoryMock{}
+		eventSt := &databaseEventStoreRepositoryMock{}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return errors.New("error")
 		}
@@ -100,7 +108,7 @@ func TestDatabaseEventStore(t *testing.T) {
 				return errors.New("error")
 			},
 		}
-		eventSt := &eventStoreRepositoryMock{}
+		eventSt := &databaseEventStoreRepositoryMock{}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return nil
 		}
@@ -137,7 +145,7 @@ func TestDatabaseEventStore(t *testing.T) {
 				return nil
 			},
 		}
-		eventSt := &eventStoreRepositoryMock{}
+		eventSt := &databaseEventStoreRepositoryMock{}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return nil
 		}
@@ -183,7 +191,7 @@ func TestDatabaseEventStore(t *testing.T) {
 				return nil
 			},
 		}
-		eventSt := &eventStoreRepositoryMock{}
+		eventSt := &databaseEventStoreRepositoryMock{}
 		eventSt.saveFunc = func(message *domainMessage) error {
 			return nil
 		}

@@ -6,8 +6,8 @@ import (
 
 type databaseEventStoreHandler struct {
 	listeners        map[string][]Listener
-	events           map[string][]Event
-	eventStore       eventStoreRepository
+	events           map[string]Event
+	eventStore       databaseEventStoreRepository
 	newEvents        events
 	listenersHandler *listenersHandler
 }
@@ -17,15 +17,16 @@ func (mes *databaseEventStoreHandler) declareListener(list Listener, ev Event) {
 }
 
 func (mes *databaseEventStoreHandler) declareEvent(ev Event) {
-	mes.events[ev.Name()] = append(mes.events[ev.Name()], ev)
+	mes.events[ev.Name()] = ev
 }
 
 func (mes *databaseEventStoreHandler) init() {
 	mes.listeners = make(map[string][]Listener)
-	mes.events = make(map[string][]Event)
+	mes.events = make(map[string]Event)
 }
 
 func (mes *databaseEventStoreHandler) load(id string, agg Aggregate) error {
+	mes.eventStore.setEvents(mes.events)
 	dm, err := mes.eventStore.load(id)
 	if err != nil {
 		return err
