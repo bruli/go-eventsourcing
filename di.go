@@ -5,7 +5,7 @@ type infrastructure struct {
 }
 
 type handler struct {
-	mysqlEventStoreHandler *mysqlEventStoreHandler
+	mysqlEventStoreHandler *databaseEventStoreHandler
 	listenersHandler       *listenersHandler
 }
 
@@ -19,6 +19,6 @@ var container pkgContainer
 func init() {
 	container.infrastructure.mysqlEventStoreRepository = &mysqlEventStoreRepository{}
 	container.handler.listenersHandler = &listenersHandler{}
-	container.handler.mysqlEventStoreHandler = &mysqlEventStoreHandler{eventStore: container.infrastructure.mysqlEventStoreRepository,
+	container.handler.mysqlEventStoreHandler = &databaseEventStoreHandler{eventStore: container.infrastructure.mysqlEventStoreRepository,
 		listenersHandler: container.handler.listenersHandler}
 }

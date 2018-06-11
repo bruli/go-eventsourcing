@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestMysqlEventStore(t *testing.T) {
+func TestDatabaseEventStore(t *testing.T) {
 	t.Run("it should return error when load return error", func(t *testing.T) {
 		eventSt := &eventStoreRepositoryMock{}
 		eventSt.loadFunc = func(ID string) (*domainMessages, error) {
@@ -17,9 +17,9 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		databaseES := databaseEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
-		assert.Error(t, mysqlES.load(uuid.NewV4().String(), agg))
+		assert.Error(t, databaseES.load(uuid.NewV4().String(), agg))
 
 	})
 
@@ -30,9 +30,9 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		databaseES := databaseEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
-		assert.Nil(t, mysqlES.load(uuid.NewV4().String(), agg))
+		assert.Nil(t, databaseES.load(uuid.NewV4().String(), agg))
 
 	})
 	t.Run("it should replay events in load", func(t *testing.T) {
@@ -43,11 +43,11 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		databaseES := databaseEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
 		agg.ReplayEventsFunc = func(e []Event) {
 		}
-		assert.Nil(t, mysqlES.load(uuid.NewV4().String(), agg))
+		assert.Nil(t, databaseES.load(uuid.NewV4().String(), agg))
 
 	})
 
@@ -58,11 +58,11 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		databaseES := databaseEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
 		agg.ReplayEventsFunc = func(e []Event) {
 		}
-		assert.Nil(t, mysqlES.save(agg))
+		assert.Nil(t, databaseES.save(agg))
 
 	})
 	t.Run("it should return error when save returns error", func(t *testing.T) {
@@ -73,7 +73,7 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		databaseES := databaseEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
@@ -81,8 +81,8 @@ func TestMysqlEventStore(t *testing.T) {
 		agg.ReplayEventsFunc = func(e []Event) {
 		}
 
-		mysqlES.applyNewEvent(&ev)
-		assert.Error(t, mysqlES.save(agg))
+		databaseES.applyNewEvent(&ev)
+		assert.Error(t, databaseES.save(agg))
 
 	})
 	t.Run("it should return error when listeners returns error", func(t *testing.T) {
@@ -106,11 +106,11 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
-		mysqlES.init()
-		mysqlES.declareListener(&list1, ev)
-		mysqlES.declareListener(&list2, ev)
-		mysqlES.declareEvent(ev)
+		databaseES := databaseEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		databaseES.init()
+		databaseES.declareListener(&list1, ev)
+		databaseES.declareListener(&list2, ev)
+		databaseES.declareEvent(ev)
 		agg := &AggregateMock{}
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
@@ -118,8 +118,8 @@ func TestMysqlEventStore(t *testing.T) {
 		agg.ReplayEventsFunc = func(e []Event) {
 		}
 
-		mysqlES.applyNewEvent(ev)
-		assert.Error(t, mysqlES.save(agg))
+		databaseES.applyNewEvent(ev)
+		assert.Error(t, databaseES.save(agg))
 
 	})
 	t.Run("it should save new event and call listeners", func(t *testing.T) {
@@ -143,11 +143,11 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
-		mysqlES.init()
-		mysqlES.declareListener(&list1, ev)
-		mysqlES.declareListener(&list2, ev)
-		mysqlES.declareEvent(ev)
+		databaseES := databaseEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		databaseES.init()
+		databaseES.declareListener(&list1, ev)
+		databaseES.declareListener(&list2, ev)
+		databaseES.declareEvent(ev)
 		agg := &AggregateMock{}
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
@@ -155,8 +155,8 @@ func TestMysqlEventStore(t *testing.T) {
 		agg.ReplayEventsFunc = func(e []Event) {
 		}
 
-		mysqlES.applyNewEvent(ev)
-		assert.Nil(t, mysqlES.save(agg))
+		databaseES.applyNewEvent(ev)
+		assert.Nil(t, databaseES.save(agg))
 
 	})
 	t.Run("it should save two events", func(t *testing.T) {
@@ -189,11 +189,11 @@ func TestMysqlEventStore(t *testing.T) {
 		}
 		listHand := listenersHandler{}
 
-		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
-		mysqlES.init()
-		mysqlES.declareListener(&list1, ev)
-		mysqlES.declareListener(&list2, ev)
-		mysqlES.declareEvent(ev)
+		databaseES := databaseEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		databaseES.init()
+		databaseES.declareListener(&list1, ev)
+		databaseES.declareListener(&list2, ev)
+		databaseES.declareEvent(ev)
 		agg := &AggregateMock{}
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
@@ -201,15 +201,15 @@ func TestMysqlEventStore(t *testing.T) {
 		agg.ReplayEventsFunc = func(e []Event) {
 		}
 
-		mysqlES.applyNewEvent(ev)
-		assert.Nil(t, mysqlES.save(agg))
+		databaseES.applyNewEvent(ev)
+		assert.Nil(t, databaseES.save(agg))
 		assert.Equal(t, 1, len(list1.HandleCalls()))
 		assert.Equal(t, 1, len(list2.HandleCalls()))
 
-		mysqlES.declareEvent(event2)
-		mysqlES.declareListener(&list3, event2)
-		mysqlES.applyNewEvent(event2)
-		assert.Nil(t, mysqlES.save(agg))
+		databaseES.declareEvent(event2)
+		databaseES.declareListener(&list3, event2)
+		databaseES.applyNewEvent(event2)
+		assert.Nil(t, databaseES.save(agg))
 		assert.Equal(t, 2, len(eventSt.saveCalls()))
 		assert.Equal(t, 1, len(list3.HandleCalls()))
 	})

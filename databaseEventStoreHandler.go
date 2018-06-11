@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type mysqlEventStoreHandler struct {
+type databaseEventStoreHandler struct {
 	listeners        map[string][]Listener
 	events           map[string][]Event
 	eventStore       eventStoreRepository
@@ -12,20 +12,20 @@ type mysqlEventStoreHandler struct {
 	listenersHandler *listenersHandler
 }
 
-func (mes *mysqlEventStoreHandler) declareListener(list Listener, ev Event) {
+func (mes *databaseEventStoreHandler) declareListener(list Listener, ev Event) {
 	mes.listeners[ev.Name()] = append(mes.listeners[ev.Name()], list)
 }
 
-func (mes *mysqlEventStoreHandler) declareEvent(ev Event) {
+func (mes *databaseEventStoreHandler) declareEvent(ev Event) {
 	mes.events[ev.Name()] = append(mes.events[ev.Name()], ev)
 }
 
-func (mes *mysqlEventStoreHandler) init() {
+func (mes *databaseEventStoreHandler) init() {
 	mes.listeners = make(map[string][]Listener)
 	mes.events = make(map[string][]Event)
 }
 
-func (mes *mysqlEventStoreHandler) load(id string, agg Aggregate) error {
+func (mes *databaseEventStoreHandler) load(id string, agg Aggregate) error {
 	dm, err := mes.eventStore.load(id)
 	if err != nil {
 		return err
@@ -40,11 +40,11 @@ func (mes *mysqlEventStoreHandler) load(id string, agg Aggregate) error {
 	return nil
 }
 
-func (mes *mysqlEventStoreHandler) applyNewEvent(e Event) {
+func (mes *databaseEventStoreHandler) applyNewEvent(e Event) {
 	mes.newEvents = append(mes.newEvents, e)
 }
 
-func (mes *mysqlEventStoreHandler) save(a Aggregate) error {
+func (mes *databaseEventStoreHandler) save(a Aggregate) error {
 	a.ReplayEvents(mes.newEvents)
 	for _, ev := range mes.newEvents {
 		dm := domainMessage{id: a.GetID(), payload: ev, recorderOn: time.Now()}
@@ -62,7 +62,7 @@ func (mes *mysqlEventStoreHandler) save(a Aggregate) error {
 	return nil
 }
 
-func (mes *mysqlEventStoreHandler) handleListeners(ev Event) error {
+func (mes *databaseEventStoreHandler) handleListeners(ev Event) error {
 	mes.listenersHandler.listeners = mes.listeners
 	return mes.listenersHandler.handle(ev)
 }
