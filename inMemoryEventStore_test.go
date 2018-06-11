@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestInMemoryEventStoreHandler(t *testing.T) {
+func TestInMemoryEventStore(t *testing.T) {
 	t.Run("it should return error when a listener returns error", func(t *testing.T) {
 		ev := EventMock{
 			NameFunc: func() string {
@@ -27,18 +27,18 @@ func TestInMemoryEventStoreHandler(t *testing.T) {
 				return errors.New("error")
 			},
 		}
-		listHand := listenersHandler{}
-		hand := inMemoryEventStoreHandler{listenersHandler: &listHand}
-		hand.init()
-		hand.declareEvent(&ev)
-		hand.declareListener(&list, &ev)
-		hand.applyNewEvent(&ev)
-		assert.Error(t, hand.save(&agg))
+		hand := InMemoryEventStore{}
+		hand.Init()
+		hand.DeclareEvent(&ev)
+		hand.DeclareListener(&list, &ev)
+		hand.ApplyNewEvent(&ev)
+		assert.Error(t, hand.Save(&agg))
+		assert.Equal(t, 1, len(list.HandleCalls()))
 	})
 	t.Run("it should dispatch event", func(t *testing.T) {
 		ev := EventMock{
 			NameFunc: func() string {
-				return "event_one"
+				return "event_two"
 			},
 		}
 
@@ -59,14 +59,13 @@ func TestInMemoryEventStoreHandler(t *testing.T) {
 				return nil
 			},
 		}
-		listHand := listenersHandler{}
-		hand := inMemoryEventStoreHandler{listenersHandler: &listHand}
-		hand.init()
-		hand.declareEvent(&ev)
-		hand.declareListener(&list1, &ev)
-		hand.declareListener(&list2, &ev)
-		hand.applyNewEvent(&ev)
-		assert.NoError(t, hand.save(&agg))
+		hand := InMemoryEventStore{}
+		hand.Init()
+		hand.DeclareEvent(&ev)
+		hand.DeclareListener(&list1, &ev)
+		hand.DeclareListener(&list2, &ev)
+		hand.ApplyNewEvent(&ev)
+		assert.NoError(t, hand.Save(&agg))
 		assert.Equal(t, 1, len(list1.HandleCalls()))
 		assert.Equal(t, 1, len(list2.HandleCalls()))
 	})
