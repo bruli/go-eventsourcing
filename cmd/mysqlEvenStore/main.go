@@ -14,7 +14,7 @@ func main() {
 	user := flag.String("user", "", "-user [USER]")
 	pass := flag.String("pass", "", "-pass [PASSWORD]")
 	flag.Parse()
-	if "" == *database || "" == *host || "" == *port || "" == *user || "" == *pass{
+	if "" == *database || "" == *host || "" == *port || "" == *user || "" == *pass {
 		fmt.Println("Usage : -host [HOST] -port [PORT] -user [USER] -pass [PASSWORD] -database [DATABASE_NAME]")
 		return
 	}

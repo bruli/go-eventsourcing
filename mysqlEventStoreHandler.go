@@ -45,6 +45,7 @@ func (mes *mysqlEventStoreHandler) applyNewEvent(e Event) {
 }
 
 func (mes *mysqlEventStoreHandler) save(a Aggregate) error {
+	a.ReplayEvents(mes.newEvents)
 	for _, ev := range mes.newEvents {
 		dm := domainMessage{id: a.GetID(), payload: ev, recorderOn: time.Now()}
 
@@ -57,11 +58,11 @@ func (mes *mysqlEventStoreHandler) save(a Aggregate) error {
 		}
 	}
 
+	mes.newEvents = nil
 	return nil
 }
 
 func (mes *mysqlEventStoreHandler) handleListeners(ev Event) error {
-	listHand := mes.listenersHandler
-	listHand.setListeners(mes.listeners)
-	return listHand.handle(ev)
+	mes.listenersHandler.listeners = mes.listeners
+	return mes.listenersHandler.handle(ev)
 }

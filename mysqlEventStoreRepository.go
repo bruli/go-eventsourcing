@@ -1,6 +1,9 @@
 package eventSourcing
 
-import "database/sql"
+import (
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
+)
 
 type mysqlEventStoreRepository struct {
 	databaseUrl string
@@ -18,7 +21,7 @@ func (m *mysqlEventStoreRepository) save(message *domainMessage) error {
 		return err
 	}
 
-	args := []interface{}{message.id, message.payload, message.recorderOn, message.payload.Name()}
+	args := []interface{}{message.id, message.payload.Payload(), message.recorderOn, message.payload.Name()}
 	_, err = stmt.Exec(args...)
 	return err
 }

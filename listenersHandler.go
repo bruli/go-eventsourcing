@@ -6,10 +6,6 @@ type listenersHandler struct {
 	listeners map[string][]Listener
 }
 
-func (lh *listenersHandler) setListeners(list map[string][]Listener) {
-	lh.listeners = list
-}
-
 func (lh *listenersHandler) handle(ev Event) error {
 	list := lh.getListeners(ev)
 	var wg sync.WaitGroup

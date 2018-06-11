@@ -60,6 +60,8 @@ func TestMysqlEventStore(t *testing.T) {
 
 		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
 		agg := &AggregateMock{}
+		agg.ReplayEventsFunc = func(e []Event) {
+		}
 		assert.Nil(t, mysqlES.save(agg))
 
 	})
@@ -75,6 +77,8 @@ func TestMysqlEventStore(t *testing.T) {
 		agg := &AggregateMock{}
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
+		}
+		agg.ReplayEventsFunc = func(e []Event) {
 		}
 
 		mysqlES.applyNewEvent(&ev)
@@ -111,6 +115,8 @@ func TestMysqlEventStore(t *testing.T) {
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
 		}
+		agg.ReplayEventsFunc = func(e []Event) {
+		}
 
 		mysqlES.applyNewEvent(ev)
 		assert.Error(t, mysqlES.save(agg))
@@ -146,10 +152,66 @@ func TestMysqlEventStore(t *testing.T) {
 		agg.GetIDFunc = func() string {
 			return uuid.NewV4().String()
 		}
+		agg.ReplayEventsFunc = func(e []Event) {
+		}
 
 		mysqlES.applyNewEvent(ev)
 		assert.Nil(t, mysqlES.save(agg))
 
+	})
+	t.Run("it should save two events", func(t *testing.T) {
+		ev := &EventMock{}
+		ev.NameFunc = func() string {
+			return "eventito"
+		}
+		event2 := &EventMock{}
+		event2.NameFunc = func() string {
+			return "other.eventito"
+		}
+		list1 := ListenerMock{
+			HandleFunc: func(event Event) error {
+				return nil
+			},
+		}
+		list2 := ListenerMock{
+			HandleFunc: func(event Event) error {
+				return nil
+			},
+		}
+		list3 := ListenerMock{
+			HandleFunc: func(event Event) error {
+				return nil
+			},
+		}
+		eventSt := &eventStoreRepositoryMock{}
+		eventSt.saveFunc = func(message *domainMessage) error {
+			return nil
+		}
+		listHand := listenersHandler{}
+
+		mysqlES := mysqlEventStoreHandler{eventStore: eventSt, listenersHandler: &listHand}
+		mysqlES.init()
+		mysqlES.declareListener(&list1, ev)
+		mysqlES.declareListener(&list2, ev)
+		mysqlES.declareEvent(ev)
+		agg := &AggregateMock{}
+		agg.GetIDFunc = func() string {
+			return uuid.NewV4().String()
+		}
+		agg.ReplayEventsFunc = func(e []Event) {
+		}
+
+		mysqlES.applyNewEvent(ev)
+		assert.Nil(t, mysqlES.save(agg))
+		assert.Equal(t, 1, len(list1.HandleCalls()))
+		assert.Equal(t, 1, len(list2.HandleCalls()))
+
+		mysqlES.declareEvent(event2)
+		mysqlES.declareListener(&list3, event2)
+		mysqlES.applyNewEvent(event2)
+		assert.Nil(t, mysqlES.save(agg))
+		assert.Equal(t, 2, len(eventSt.saveCalls()))
+		assert.Equal(t, 1, len(list3.HandleCalls()))
 	})
 }
 
